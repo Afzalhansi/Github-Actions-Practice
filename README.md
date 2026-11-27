@@ -1,64 +1,185 @@
 # GitHub Actions Practice
 
-A hands-on repo for learning **GitHub Actions** from scratch. Every topic has its own small workflow file in `.github/workflows/`, built and tested one step at a time. Each file is a working example you can trigger, read, and break on purpose to see what happens.
+A structured, hands-on learning repository for **GitHub Actions** and CI/CD pipeline design. Each topic is implemented as an isolated, runnable workflow, tested against real trigger scenarios, and documented below.
 
-**Goal:** understand how CI/CD pipelines are built, so I can write real ones for QA automation (Selenium, Cucumber, TestNG) and DevOps work (Docker, AWS, Terraform).
-
----
-
-## How to use this repo
-
-1. Open the **Actions** tab on GitHub.
-2. Pick a workflow from the left sidebar.
-3. Click **Run workflow** (for the ones with a manual trigger), or push a change to trigger it.
-4. Open the run and read the logs of each step.
+![01](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/01-hello-world.yml/badge.svg)
+![02](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/02-triggers.yml/badge.svg)
+![03](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/03-steps-checkout.yml/badge.svg)
+![04](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/04-filters.yml/badge.svg)
+![05](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/05-contexts.yml/badge.svg)
+![06](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/06-conditionals.yml/badge.svg)
+![07](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/07-env-vars.yml/badge.svg)
 
 ---
 
-## Topics covered so far
+## Table of Contents
 
-| # | File | Topic | What it shows |
-|---|------|-------|---------------|
-| 01 | `01-hello-world.yml` | Anatomy of a workflow | The basic parts: `name`, `on`, `jobs`, `runs-on`, `steps`. Every run starts on a fresh, empty virtual machine. |
-| 02 | `02-triggers.yml` | Triggers (events) | `push`, `pull_request`, `schedule` (cron, always in UTC), and `workflow_dispatch` with a manual input form (dropdown and checkbox). |
-| 03 | `03-steps-checkout.yml` | Steps, `uses` and checkout | `run` (shell commands) vs `uses` (ready-made actions), `actions/checkout` to get the code onto the runner, `actions/setup-java` to install Java 17, and `working-directory`. |
-| 04 | `04-filters.yml` | Workflow filters | Run only for certain `branches`, `tags`, or `paths`. A `paths` filter is ignored when a tag is pushed. |
-| 05 | `05-contexts.yml` | Contexts and expressions | Reading run information with `${{ }}`: `github`, `runner`, `env`, plus functions like `contains()`, `format()`, `startsWith()`, `toJSON()`. |
-| 06 | `06-conditionals.yml` | Conditionals | `if:` on steps, and the status functions `success()`, `failure()`, `always()`. Combining conditions with `&&` and `\|\|`. |
-| 07 | `07-env-vars.yml` | Environment variables | Variables at workflow, job, and step level (the narrowest wins), `$GITHUB_ENV` for later steps, default variables, and why variables never cross between jobs. |
-
----
-
-## Coming next
-
-- Secrets and variables (`secrets`, `vars`, `GITHUB_TOKEN`)
-- Step and job outputs
-- Environments and approvals
-- Matrix builds
-- Job dependencies (`needs`)
-- Caching and artifacts
-- Concurrency, timeouts, and `continue-on-error`
-- Reusable workflows and composite actions
-- Service containers and self-hosted runners
-- Real pipelines: Selenium/TestNG tests, Docker build and push, AWS login with OIDC, Terraform plan and apply, full CI/CD
-- Security basics: least-privilege `permissions`, pinning actions, Dependabot
+- [Overview](#overview)
+- [Repository Structure](#repository-structure)
+- [Workflow Catalog](#workflow-catalog)
+- [Learning Roadmap](#learning-roadmap)
+- [Getting Started](#getting-started)
+- [Conventions](#conventions)
+- [Key Takeaways](#key-takeaways)
+- [Tech Stack](#tech-stack)
+- [Author](#author)
 
 ---
 
-## Lessons learned along the way
+## Overview
 
-- Workflow files must live in `.github/workflows/` and be valid YAML. Indentation matters, and a `: ` inside an unquoted `run:` value breaks the file (use `run: |`).
-- The runner starts empty. Add `actions/checkout` to get your code.
-- A `pull_request` run uses a temporary merge ref (`refs/pull/N/merge`), not your branch.
-- Cron schedules run in UTC. 9:00 AM Dubai is `0 5 * * 1-5`.
-- String comparisons must match exactly. One extra space inside quotes silently breaks a condition.
-- When a condition doesn't behave, add a debug step that prints the real values.
-- Each job gets a fresh machine. Variables set in one job are not visible in another.
+This repository documents a progressive path through GitHub Actions, from the anatomy of a workflow to production-style pipelines. It is designed around three principles:
+
+- **One concept per workflow.** Each file isolates a single feature so its behaviour is easy to observe in the run logs.
+- **Verified by execution.** Every workflow is triggered in multiple ways (push, pull request, manual dispatch, tags) and the results are checked against expected behaviour.
+- **Applied to real use cases.** The later stages target practical pipelines: test automation (Selenium, Cucumber, TestNG), container builds, cloud deployment, and infrastructure as code.
 
 ---
 
-## Tech used
+## Repository Structure
 
-- GitHub Actions (YAML workflows)
-- Ubuntu hosted runners
-- Java 17 (Temurin) as the first step toward test automation pipelines
+```
+.
+├── .github/
+│   └── workflows/
+│       ├── 01-hello-world.yml
+│       ├── 02-triggers.yml
+│       ├── 03-steps-checkout.yml
+│       ├── 04-filters.yml
+│       ├── 05-contexts.yml
+│       ├── 06-conditionals.yml
+│       └── 07-env-vars.yml
+├── src/                  # sample files used to test path filters
+├── docs/                 # sample files used to test path filters
+└── README.md
+```
+
+---
+
+## Workflow Catalog
+
+| # | Workflow | Topic | Key concepts | Triggers |
+|---|----------|-------|--------------|----------|
+| 01 | `01-hello-world.yml` | Workflow anatomy | `name`, `on`, `jobs`, `runs-on`, `steps`; ephemeral runner | push, manual |
+| 02 | `02-triggers.yml` | Event triggers | `push`, `pull_request`, `schedule` (cron, UTC), `workflow_dispatch` with typed inputs | push, pull request, schedule, manual |
+| 03 | `03-steps-checkout.yml` | Steps and actions | `run` vs `uses`, `actions/checkout`, `actions/setup-java`, `with`, `working-directory` | push, manual |
+| 04 | `04-filters.yml` | Workflow filters | `branches`, `tags`, `paths`; glob patterns; filter behaviour on tag pushes | push, pull request |
+| 05 | `05-contexts.yml` | Contexts and expressions | `github`, `runner`, `env` contexts; `contains()`, `format()`, `startsWith()`, `toJSON()` | push, tags, manual |
+| 06 | `06-conditionals.yml` | Conditional execution | `if:`, `success()`, `failure()`, `always()`; `&&`, `\|\|`, and grouping | push, manual |
+| 07 | `07-env-vars.yml` | Environment variables | workflow, job, and step scope; precedence; `$GITHUB_ENV`; default variables; job isolation | push, manual |
+
+The scheduled run in workflow 02 uses `0 5 * * 1-5`, which is 05:00 UTC, or 09:00 in Dubai (UTC+4), Monday to Friday.
+
+---
+
+## Learning Roadmap
+
+**Foundations**
+- [x] Workflow anatomy
+- [x] Triggers and events
+- [x] Steps, actions, and checkout
+
+**Control flow**
+- [x] Workflow filters
+- [x] Contexts and expressions
+- [x] Conditionals
+- [x] Environment variables
+
+**Configuration and data**
+- [ ] Secrets and variables, `GITHUB_TOKEN`
+- [ ] Step and job outputs
+- [ ] Environments and approval gates
+
+**Scaling and performance**
+- [ ] Matrix strategy
+- [ ] Job dependencies (`needs`)
+- [ ] Caching
+- [ ] Artifacts
+- [ ] Concurrency, timeouts, `continue-on-error`
+
+**Reuse and infrastructure**
+- [ ] Reusable workflows
+- [ ] Composite actions
+- [ ] Service containers and container jobs
+- [ ] Self-hosted runners
+
+**Real-world pipelines**
+- [ ] Selenium / Cucumber / TestNG test pipeline with report artifacts
+- [ ] Docker image build and push
+- [ ] AWS authentication with OIDC
+- [ ] Terraform plan and apply pipeline
+- [ ] End-to-end CI/CD to AWS
+
+**Security and maintenance**
+- [ ] Least-privilege `permissions`
+- [ ] Pinning actions to commit SHAs
+- [ ] Dependabot for action updates
+- [ ] Debugging and re-running with debug logging
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- A GitHub account with access to this repository
+- Git installed locally
+- A code editor with YAML support (for example VS Code with the *GitHub Actions* and *YAML* extensions)
+
+### Clone the repository
+
+```bash
+git clone https://github.com/Afzalhansi/Github-Actions-Practice.git
+cd Github-Actions-Practice
+```
+
+### Run a workflow
+
+1. Open the **Actions** tab of the repository.
+2. Select a workflow from the sidebar.
+3. Choose **Run workflow** for workflows that support manual dispatch, or push a change that matches the workflow's filters.
+4. Open the run and inspect the logs for each step.
+
+Several workflows use a `paths` filter that includes their own file, so editing a workflow and pushing is enough to trigger it.
+
+---
+
+## Conventions
+
+- Workflow files are numbered by topic and named in kebab-case.
+- Each workflow has a descriptive `name:` that matches its number, so runs are easy to identify in the Actions tab.
+- Third-party actions are pinned to a major version (for example `actions/checkout@v4`).
+- Values that appear inside shell scripts are passed through `env:` instead of being interpolated directly with `${{ }}`.
+- Commit messages are short, imperative, and describe the change (for example `Add conditionals workflow`).
+
+---
+
+## Key Takeaways
+
+- Workflows must live in `.github/workflows/` and be valid YAML. A colon followed by a space inside an unquoted `run:` value breaks parsing, so multi-word commands use `run: |`.
+- Every job runs on a fresh runner that starts empty. Use `actions/checkout` to obtain the repository contents.
+- A `pull_request` run executes against a temporary merge ref (`refs/pull/<n>/merge`), not the source branch.
+- `paths` filters are not evaluated for tag pushes, so a matching tag always triggers a run.
+- Cron expressions are evaluated in UTC.
+- String comparisons in `if:` conditions must match exactly. A single trailing space inside a quoted value silently prevents a match.
+- Expressions in `${{ }}` are resolved by GitHub before the shell executes the script. Shell variables (`$VAR`) are resolved at run time.
+- `failure()` and `always()` replace the default `success()` check, which is what makes cleanup and notification steps possible.
+- Variables are scoped per job. Data does not move between jobs without explicit outputs.
+- When a condition misbehaves, a debug step that prints the actual values is the fastest diagnostic.
+
+---
+
+## Tech Stack
+
+- GitHub Actions (YAML workflows, GitHub-hosted Ubuntu runners)
+- Java 17 (Eclipse Temurin) via `actions/setup-java`
+- Planned: Maven, Selenium, Cucumber, TestNG, Docker, AWS, Terraform
+
+---
+
+## Author
+
+**Abdul Basit Hansi**
+QA Automation Engineer, building skills toward SDET and DevOps roles.
+
+[LinkedIn](https://linkedin.com/in/abdulhansi) · [GitHub](https://github.com/Afzalhansi)
