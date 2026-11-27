@@ -1,0 +1,25 @@
+name: 04 - Workflow Filters
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+    tags:
+      - 'v*'
+    # TODO: your task (paths filter) goes here
+    paths:
+      - 'src/**'
+      - '.github/workflows/04-filters.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+jobs:
+  filter-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show what triggered this
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
