@@ -20,6 +20,11 @@ jobs:
   conditional-demo:
     runs-on: ubuntu-latest
     steps:
+      - name: Debug inputs
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "environment=${{ inputs.environment }}" 
+          
       - name: Normal step (default condition is success)
         run: echo "all previous steps succeeded"
 
