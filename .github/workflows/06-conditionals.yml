@@ -46,8 +46,7 @@ jobs:
         if: always()
         run: echo "Cleanup step"
 
-      # TODO: your task goes here
       - name: Staging or main deploy path
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging ')
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging')
         run: |
           echo "Staging or main deploy path"
