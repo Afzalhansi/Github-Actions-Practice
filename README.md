@@ -9,6 +9,8 @@ A structured, hands-on learning repository for **GitHub Actions** and CI/CD pipe
 ![05](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/05-contexts.yml/badge.svg)
 ![06](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/06-conditionals.yml/badge.svg)
 ![07](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/07-env-vars.yml/badge.svg)
+![08](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/08-secrets-vars.yml/badge.svg)
+![09](https://github.com/Afzalhansi/Github-Actions-Practice/actions/workflows/09-outputs.yml/badge.svg)
 
 ---
 
@@ -48,7 +50,9 @@ This repository documents a progressive path through GitHub Actions, from the an
 │       ├── 04-filters.yml
 │       ├── 05-contexts.yml
 │       ├── 06-conditionals.yml
-│       └── 07-env-vars.yml
+│       ├── 07-env-vars.yml
+│       ├── 08-secrets-vars.yml
+│       └── 09-outputs.yml
 ├── src/                  # sample files used to test path filters
 ├── docs/                 # sample files used to test path filters
 └── README.md
@@ -67,8 +71,12 @@ This repository documents a progressive path through GitHub Actions, from the an
 | 05 | `05-contexts.yml` | Contexts and expressions | `github`, `runner`, `env` contexts; `contains()`, `format()`, `startsWith()`, `toJSON()` | push, tags, manual |
 | 06 | `06-conditionals.yml` | Conditional execution | `if:`, `success()`, `failure()`, `always()`; `&&`, `\|\|`, and grouping | push, manual |
 | 07 | `07-env-vars.yml` | Environment variables | workflow, job, and step scope; precedence; `$GITHUB_ENV`; default variables; job isolation | push, manual |
+| 08 | `08-secrets-vars.yml` | Secrets and variables | `secrets` vs `vars` contexts; log masking; passing secrets through `env:`; `GITHUB_TOKEN` and `permissions`; GitHub CLI authentication | push, manual |
+| 09 | `09-outputs.yml` | Step and job outputs | step `id`, `$GITHUB_OUTPUT`, job `outputs:`, `needs` context; passing data between jobs | push, manual |
 
 The scheduled run in workflow 02 uses `0 5 * * 1-5`, which is 05:00 UTC, or 09:00 in Dubai (UTC+4), Monday to Friday.
+
+Workflow 08 requires a repository secret named `MY_SECRET` and a repository variable named `APP_ENV` (Settings, Secrets and variables, Actions). Without them the values resolve to empty strings.
 
 ---
 
@@ -86,8 +94,8 @@ The scheduled run in workflow 02 uses `0 5 * * 1-5`, which is 05:00 UTC, or 09:0
 - [x] Environment variables
 
 **Configuration and data**
-- [ ] Secrets and variables, `GITHUB_TOKEN`
-- [ ] Step and job outputs
+- [x] Secrets and variables, `GITHUB_TOKEN`
+- [x] Step and job outputs
 - [ ] Environments and approval gates
 
 **Scaling and performance**
@@ -133,6 +141,17 @@ git clone https://github.com/Afzalhansi/Github-Actions-Practice.git
 cd Github-Actions-Practice
 ```
 
+### Configure secrets and variables (required for workflow 08)
+
+In the repository, open **Settings, Secrets and variables, Actions** and create:
+
+| Type | Name | Example value |
+|------|------|---------------|
+| Repository secret | `MY_SECRET` | any dummy value |
+| Repository variable | `APP_ENV` | `practice` |
+
+Secrets and variables are separate stores. A value created in one is not visible through the other's context.
+
 ### Run a workflow
 
 1. Open the **Actions** tab of the repository.
@@ -149,8 +168,9 @@ Several workflows use a `paths` filter that includes their own file, so editing 
 - Workflow files are numbered by topic and named in kebab-case.
 - Each workflow has a descriptive `name:` that matches its number, so runs are easy to identify in the Actions tab.
 - Third-party actions are pinned to a major version (for example `actions/checkout@v4`).
-- Values that appear inside shell scripts are passed through `env:` instead of being interpolated directly with `${{ }}`.
-- Commit messages are short, imperative, and describe the change (for example `Add conditionals workflow`).
+- Values that appear inside shell scripts, including secrets, are passed through `env:` instead of being interpolated directly with `${{ }}`.
+- Multi-word shell commands use `run: |` so that colons inside the command cannot break YAML parsing.
+- Commit messages are short, imperative, and describe the change (for example `Add outputs workflow`).
 
 ---
 
@@ -164,14 +184,18 @@ Several workflows use a `paths` filter that includes their own file, so editing 
 - String comparisons in `if:` conditions must match exactly. A single trailing space inside a quoted value silently prevents a match.
 - Expressions in `${{ }}` are resolved by GitHub before the shell executes the script. Shell variables (`$VAR`) are resolved at run time.
 - `failure()` and `always()` replace the default `success()` check, which is what makes cleanup and notification steps possible.
-- Variables are scoped per job. Data does not move between jobs without explicit outputs.
-- When a condition misbehaves, a debug step that prints the actual values is the fastest diagnostic.
+- Variables are scoped per job. Data moves between jobs only through explicit outputs.
+- Secrets and variables live in separate stores (`secrets.*` and `vars.*`). A missing value resolves to an empty string without an error, so a wrong location fails silently.
+- Log masking matches the exact secret string only. A transformed copy of a secret is not masked, so secrets should never be printed.
+- Step outputs require a step `id` and are written to `$GITHUB_OUTPUT`. A downstream job reads them through `needs.<job>.outputs.<name>` and must declare `needs`.
+- When a condition or value misbehaves, a debug step that prints the actual values is the fastest diagnostic.
 
 ---
 
 ## Tech Stack
 
 - GitHub Actions (YAML workflows, GitHub-hosted Ubuntu runners)
+- GitHub CLI (`gh`) authenticated with the automatic `GITHUB_TOKEN`
 - Java 17 (Eclipse Temurin) via `actions/setup-java`
 - Planned: Maven, Selenium, Cucumber, TestNG, Docker, AWS, Terraform
 
