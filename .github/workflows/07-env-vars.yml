@@ -1,0 +1,61 @@
+name: 07 - Environment Variables
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/07-env-vars.yml'
+
+env:
+  APP_NAME: practice-app
+  LOG_LEVEL: info
+
+jobs:
+  job-one:
+    runs-on: ubuntu-latest
+    env:
+      LOG_LEVEL: debug
+      JOB_ONLY: only-in-job-one
+    steps:
+      - name: Workflow and job variables
+        run: |
+          echo "APP_NAME=$APP_NAME"
+          echo "LOG_LEVEL=$LOG_LEVEL"
+          echo "JOB_ONLY=$JOB_ONLY"
+
+      - name: Step-level override
+        env:
+          LOG_LEVEL: trace
+          STEP_ONLY: only-in-this-step
+        run: |
+          echo "LOG_LEVEL=$LOG_LEVEL"
+          echo "STEP_ONLY=$STEP_ONLY"
+
+      - name: Step variables are gone again
+        run: |
+          echo "LOG_LEVEL=$LOG_LEVEL"
+          echo "STEP_ONLY=[$STEP_ONLY]"
+
+      - name: Create a variable for later steps
+        run: echo "BUILD_ID=build-${{ github.run_number }}" >> "$GITHUB_ENV"
+
+      - name: Use the variable created above
+        run: echo "BUILD_ID=$BUILD_ID"
+
+      # TODO: your task goes here
+      - name: Default variables and the env context
+        env:
+          GREETING: "Hello from ${{ env.APP_NAME }}"
+        run: |
+          echo "Repo: $GITHUB_REPOSITORY"
+          echo "Runner OS: $RUNNER_OS"
+          echo "$GREETING"
+
+  job-two:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Job one's variables are not visible here
+        run: |
+          echo "APP_NAME=$APP_NAME"
+          echo "JOB_ONLY=[$JOB_ONLY]"
+          echo "BUILD_ID=[$BUILD_ID]"
