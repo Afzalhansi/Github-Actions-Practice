@@ -1,0 +1,48 @@
+name: 06 - Conditionals
+
+on:
+  workflow_dispatch:
+    inputs:
+      should_fail:
+        description: 'Force a failing step'
+        type: boolean
+        default: false
+      environment:
+        description: 'Target environment'
+        type: choice
+        options: [dev, staging, prod]
+        default: dev
+  push:
+    paths:
+      - '.github/workflows/06-conditionals.yml'
+
+jobs:
+  conditional-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Normal step (default condition is success)
+        run: echo "all previous steps succeeded"
+
+      - name: Only on prod
+        if: inputs.environment == 'prod'
+        run: echo "Deploying to PROD"
+
+      - name: Maybe fail
+        if: inputs.should_fail
+        run: |
+          echo "Failing on purpose"
+          exit 1
+
+      - name: Runs only if an earlier step failed
+        if: failure()
+        run: echo "Something failed earlier"
+
+      - name: Runs no matter what
+        if: always()
+        run: echo "Cleanup step"
+
+      # TODO: your task goes here
+      - name: Staging or main deploy path
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging ')
+        run: |
+          echo "Staging or main deploy path"
