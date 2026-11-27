@@ -1,0 +1,49 @@
+name: 05 - Contexts and Expressions
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - '.github/workflows/05-contexts.yml'
+
+env:
+  APP_NAME: practice-app
+
+jobs:
+  contexts-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: github context
+        run: |
+          echo "Repo:      ${{ github.repository }}"
+          echo "Event:     ${{ github.event_name }}"
+          echo "Ref:       ${{ github.ref }}"
+          echo "Ref name:  ${{ github.ref_name }}"
+          echo "SHA:       ${{ github.sha }}"
+          echo "Run #:     ${{ github.run_number }}"
+          echo "Actor:     ${{ github.actor }}"
+
+      - name: runner and env contexts
+        run: |
+          echo "Runner OS:   ${{ runner.os }}"
+          echo "Runner arch: ${{ runner.arch }}"
+          echo "App name:    ${{ env.APP_NAME }}"
+
+      - name: expression functions
+        run: |
+          echo "Contains test: ${{ contains(github.ref_name, 'main') }}"
+          echo "Formatted: ${{ format('{0}-{1}', env.APP_NAME, github.run_number) }}"
+
+      - name: Dump the whole github context
+        run: echo '${{ toJSON(github) }}'
+
+      - name: Print tag name
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "Tag: ${{ github.ref_name }}"
+
+      - name: Print short SHA
+        env:
+          SHA: ${{ github.sha }}
+        run: echo "Short SHA: ${SHA:0:7}"
