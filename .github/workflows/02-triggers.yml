@@ -1,0 +1,38 @@
+name: 02 - Triggers
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 5 * * 1-5'   # <- your task
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options: [dev, staging, prod]
+      debug:
+        description: 'Enable debug output'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  show-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Which event fired?
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Branch/ref: ${{ github.ref }}"
+          echo "Triggered by: ${{ github.actor }}"
+
+      - name: Show manual inputs (only for manual runs)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Debug: ${{ inputs.debug }}"
